@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="./assets/js/utils.js"></script>
+<script src="./assets/js/jquery.min-3.3.1.js"></script>
+<title>图书管理系统</title>
+<style>
+*{padding:0;margin:0;}
+	h2{
+		text-align:center
+	}
+	.operate{
+		width:800px;
+		margin: 0 auto;
+	}
+	.operate button:first-child{
+		float:left;
+	}
+	.operate button:last-child{
+		float:right;
+	}
+	table{
+		width:800px;
+		margin: 50px auto 0 auto;
+		table-layout: fixed;
+	}
+	table td{
+	text-align:center
+	}
+	table .brief{
+		overflow:hidden;
+    	text-overflow: ellipsis;
+    	white-space: nowrap;
+	}
+	button{
+		cursor: pointer;
+	}
+	.mask{
+		width:100%;
+		height:100%;
+		background-color:rgba(0,0,0,0.5);
+		position:fixed;
+		top:0;
+		left:0;
+		display:none;
+	}
+	.popup{
+		width:500px;
+		height:auto;
+		overflow:hidden;
+		border-radius: 5px;
+		background-color:#fff;
+		padding:10px;	
+    	position: absolute;
+    	top: 10%;
+    	left: 50%;
+    	margin-left: -250px;
+    	display:none;
+	}
+	.popup .item{
+		margin-top:20px;
+	}
+	.popup .item .label{
+		font-size:14px;
+		display:inline-block;
+		width:30%;
+	}
+	.popup .item .input{
+		width:60%;
+	}
+	.popup .save{
+		text-align:center;
+		margin-top:20px;
+	}
+</style>
+</head>
+<body>
+	<h2>图书库</h2>
+	<div class="operate"><button onclick="showPopup()">添加</button><button onclick="logout()">退出</button></div>
+	<table border="1" cellspacing="0"></table>
+		
+		<div id="mask" class="mask" onclick="hidePopup()"></div>
+		<div id="popup" class="popup">
+			<form>
+				<div class="item">
+					<span class="label">书名:</span>
+					<input class="input" type="text" name="name" value="" />
+				</div>
+				<div class="item">
+					<span class="label">作者:</span>
+					<input class="input" type="text" name="author" value="" />
+				</div>
+				<div class="item">
+					<span class="label">简介:</span>
+					<textarea class="input" name="brief" value=""></textarea>
+				</div>
+				<div class="item">
+					<span class="label">出版时间:</span>
+					<input class="input" type="number" name="year" value="" />
+				</div>
+				<div class="item">
+					<span class="label">库存:</span>
+					<input class="input" type="number" name="num" value="" />
+				</div>
+				<input type="hidden" name="id" value="0" />
+			</form>
+			<div class="save">
+				<button type="button" onclick="save()">保存</button>
+			</div>
+		</div>
+		<h2 onclick="jump()" style="padding-top: 50px;">最浪漫的事</h2>
+</body>
+</html>
+<script type="text/javascript">
+    var list = [];
+	//初始化页面拉取列表
+	window.onload = function(){
+		if(getCookie("isLogin") != "1"){
+			//未登录直接跳到登录页
+			window.location.href="/book-mange/login.html"
+			return
+		}
+		$.ajax({
+			url:"main-servlet",
+			type:"get",
+			dataType:"json",
+			success:function(res){
+				if(res.status == "1"){
+					//更新列表数据
+					var html = '<tr><th width="5%">编号</th><th width="20%">书名</th><th width="10%">作者</th><th>简介</th><th width="10%">出版时间</th><th width="10%">库存</th><th width="15%">操作</th></tr>';
+					res.list.forEach((item,index)=>{
+						html += '<tr><td>'+item.id+'</td><td>'+item.name+'</td><td>'+item.author+'</td><td class="brief">'+item.brief+'</td><td>'+item.year+'年</td><td>'+item.num+'册</td><td><button onclick="edit('+index+')">编辑</button><button onclick="del('+item.id+')">删除</button></td></tr>';
+					})
+					$("table").html(html)
+					list = res.list
+				}
+			}
+		});
+	}
+	
+	function logout(){
+		setCookie("isLogin","0",0)
+		window.location.href="/book-mange/login.html"
+	}
+	
+	//弹出添加窗
+	function showPopup(){
+		var mask = document.getElementById("mask")
+		var popup = document.getElementById("popup")
+		mask.style.display = "block"
+		popup.style.display = "block"
+	}
+	function hidePopup(){
+		$("input[name='name']").val()
+		$("input[name='author']").val()
+		$("textarea[name='brief']").val()
+		$("input[name='year']").val()
+		$("input[name='num']").val()
+		var mask = document.getElementById("mask")
+		var popup = document.getElementById("popup")
+		mask.style.display = "none"
+		popup.style.display = "none"
+	}
+	
+	//弹出编辑窗
+	function edit(index){
+		showPopup()
+		$("input[name='id']").val(list[index].id)
+		$("input[name='name']").val(list[index].name)
+		$("input[name='author']").val(list[index].author)
+		$("textarea[name='brief']").val(list[index].brief)
+		$("input[name='year']").val(list[index].year)
+		$("input[name='num']").val(list[index].num)
+	}
+	
+	//提交
+	function save(){
+		var id = $("input[name='id']").val()
+		if(parseInt(id) > 0){
+			//编辑
+			$.ajax({
+				url:"main-servlet/edit",
+				type:"post",
+				dataType:"json",
+				data:{
+					id:id,
+					name:$("input[name='name']").val(),
+					author:$("input[name='author']").val(),
+					brief:$("textarea[name='brief']").val(),
+					year:$("input[name='year']").val(),
+					num:$("input[name='num']").val()
+				},
+				success:function(res){
+					if(res.status == "1"){
+						window.location.reload()
+					}else{
+						alert("修改失败")
+					}
+				}
+			});
+		}else{
+			//添加
+			$.ajax({
+				url:"main-servlet/add",
+				type:"post",
+				dataType:"json",
+				data:{
+					name:$("input[name='name']").val(),
+					author:$("input[name='author']").val(),
+					brief:$("textarea[name='brief']").val(),
+					year:$("input[name='year']").val(),
+					num:$("input[name='num']").val()
+				},
+				success:function(res){
+					if(res.status == "1"){
+						window.location.reload()
+					}else{
+						alert("添加失败")
+					}
+				}
+			});
+		}
+	
+	}
+	
+	//删除
+	function del(id){
+		var r=confirm("确定要删除吗？")
+		if (r==true)
+		{
+			$.ajax({
+				url:"main-servlet/del",
+				type:"post",
+				dataType:"json",
+				data:{
+					id:id
+				},
+				success:function(res){
+					if(res.status == "1"){
+						window.location.reload()
+					}else{
+						alert("删除失败")
+					}
+				}
+			});
+		}
+	}
+	
+	
+	function jump(){
+		window.location.href="/book-mange/QH.html";
+	}
+	
+</script>

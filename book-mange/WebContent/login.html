@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="./assets/js/utils.js"></script>
+<script src="./assets/js/jquery.min-3.3.1.js"></script>
+<title>登录</title>
+<style>
+*{padding:0;margin:0;}
+	h2{
+	text-align:center;
+	margin-top:100px;
+	}
+	.content{
+		width:300px;
+		text-align:center;
+		margin: 50px auto 0 auto;
+	}
+	.content div{
+	margin-bottom:20px;
+	}
+	button{
+	cursor: pointer;
+	}
+	
+	.login-botton-ui{
+	width: 100px;
+    height: 25px;
+    color: black;
+    background-color: #5efafa;
+	}
+</style>
+</head>
+<body>
+	<h2>欢迎您的到来！</h2>
+	<h2>梅光阳欢迎您来到您的私人空间</h2>
+	<div class="content">
+		<form action="" method="post">
+			<div>
+				<span>账号:</span>
+				<input type="text" data-name="username" value="" placeholder="请输入账号" />
+			</div>
+			<div>
+				<span>密码:</span>
+				<input type="password" data-name="password" value=""  placeholder="请输入密码"/>
+			</div>
+		</form>
+		<button class="login-botton-ui" type="button" onclick="dosumit()">登录</button>
+		<button type="button" onclick="register()">注册中心</button>
+	</div>
+	<div></div>
+</body>
+ 
+ <script type="text/javascript">
+	window.onload = function(){
+		if(getCookie("isLogin") == "1"){
+			//已登录直接跳到首页
+			window.location.href="/book-mange/index.html"
+			return
+		}
+	}
+	//登录
+	function dosumit(){
+		debugger;
+		var name=docuement.find('data-name=username').val();
+		var pwd=docuement.find('data-name=password').val();
+		
+		
+		
+		
+		$.ajax({
+			url:"main-servlet/login",
+			type:"post",
+			dataType:"json",
+			data:{
+				username:$("input[name='username']").val(),
+				password:$("input[name='password']").val()
+			},
+			success:function(res){
+				console.log("res:",res)
+				if(res.status == "1"){
+					//登录成功
+					//设置cookie
+					setCookie("isLogin","1",1);
+					//跳转首页
+					debugger;
+					window.location.href="/book-mange/bookschool.html";
+				}else{
+					alert("登录失败")
+				}
+			}
+		});
+		
+	};
+	
+	function register(){
+		window.location.href="/book-mange/register.html";		
+		
+	}
+	
+	
+	</script>
+ 
+</html>
